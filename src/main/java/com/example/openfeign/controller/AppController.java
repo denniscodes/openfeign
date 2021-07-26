@@ -1,6 +1,7 @@
 package com.example.openfeign.controller;
 
 import com.example.openfeign.OpenfeignApplication;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import com.example.openfeign.model.ApiStatus;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,12 @@ public class AppController {
     }
     @GetMapping(value="/status404")
     ResponseEntity<String> get404Status() {
-        ResponseEntity<ApiStatus> statusResponse = apiClient.getNotFoundStatus();
+        ResponseEntity<ApiStatus> statusResponse = null;
+        try {
+            statusResponse = apiClient.getNotFoundStatus();
+        } catch (FeignException.FeignClientException e) {
+            statusResponse = new ResponseEntity<>(new ApiStatus("ERROR", "Exception", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         //ResponseEntity<ApiStatus> statusResponse = new ResponseEntity<>(new ApiStatus("SUCCESS", "OK", "Complete"), HttpStatus.OK);
         ApiStatus status = statusResponse.getBody();
         log.info(String.format("Http Status: %d", statusResponse.getStatusCodeValue()));
