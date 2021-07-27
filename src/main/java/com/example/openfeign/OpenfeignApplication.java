@@ -18,11 +18,4 @@ public class OpenfeignApplication {
         SpringApplication.run(OpenfeignApplication.class, args);
     }
 
-    @FeignClient(value = "simple", url="http://localhost:8090")
-    public static interface ApiClient {
-        @RequestMapping(method = RequestMethod.GET)
-        ResponseEntity<ApiStatus> getSimpleStatus();
-        @RequestMapping(value="status404", method = RequestMethod.GET)
-        ResponseEntity<ApiStatus> getNotFoundStatus();
-    }
 }

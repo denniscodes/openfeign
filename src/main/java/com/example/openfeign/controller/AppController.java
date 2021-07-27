@@ -1,6 +1,7 @@
 package com.example.openfeign.controller;
 
-import com.example.openfeign.OpenfeignApplication;
+import com.example.openfeign.client.ApiClient;
+import com.example.openfeign.client.ApiClientException;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import com.example.openfeign.model.ApiStatus;
@@ -14,11 +15,19 @@ import org.springframework.web.bind.annotation.GetMapping;
 @RequiredArgsConstructor
 @Slf4j
 public class AppController {
-    private final OpenfeignApplication.ApiClient apiClient;
+    private final ApiClient apiClient;
     @GetMapping(value="/status")
     ResponseEntity<String> getApiStatus() {
         ResponseEntity<ApiStatus> statusResponse = apiClient.getSimpleStatus();
         //ResponseEntity<ApiStatus> statusResponse = new ResponseEntity<>(new ApiStatus("SUCCESS", "OK", "Complete"), HttpStatus.OK);
+        ApiStatus status = statusResponse.getBody();
+        return new ResponseEntity<>(String.format("API status: [%s] code: [%s] reason: [%s]",
+                status.getStatus(), status.getCode(), status.getReason()),
+                statusResponse.getStatusCode());
+    }
+    @GetMapping(value="/status401")
+    ResponseEntity<String> getApiStatus() {
+        ResponseEntity<ApiStatus> statusResponse = apiClient.getNotAuthorizedStatus();
         ApiStatus status = statusResponse.getBody();
         return new ResponseEntity<>(String.format("API status: [%s] code: [%s] reason: [%s]",
                 status.getStatus(), status.getCode(), status.getReason()),
@@ -29,12 +38,21 @@ public class AppController {
         ResponseEntity<ApiStatus> statusResponse = null;
         try {
             statusResponse = apiClient.getNotFoundStatus();
-        } catch (FeignException.FeignClientException e) {
-            statusResponse = new ResponseEntity<>(new ApiStatus("ERROR", "Exception", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (ApiClientException e) {
+            statusResponse = new ResponseEntity<>(new ApiStatus("ERROR", "Exception", e.getMessage()),
+                    HttpStatus.valueOf(e.getResponseStatus().value()));
         }
         //ResponseEntity<ApiStatus> statusResponse = new ResponseEntity<>(new ApiStatus("SUCCESS", "OK", "Complete"), HttpStatus.OK);
         ApiStatus status = statusResponse.getBody();
         log.info(String.format("Http Status: %d", statusResponse.getStatusCodeValue()));
+        return new ResponseEntity<>(String.format("API status: [%s] code: [%s] reason: [%s]",
+                status.getStatus(), status.getCode(), status.getReason()),
+                statusResponse.getStatusCode());
+    }
+    @GetMapping(value="/status501")
+    ResponseEntity<String> getApiStatus() {
+        ResponseEntity<ApiStatus> statusResponse = apiClient.getServerErrorStatus();
+        ApiStatus status = statusResponse.getBody();
         return new ResponseEntity<>(String.format("API status: [%s] code: [%s] reason: [%s]",
                 status.getStatus(), status.getCode(), status.getReason()),
                 statusResponse.getStatusCode());

@@ -6,6 +6,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class ApiStatus {
+    public static final String ERROR = "ERROR";
+    public static final String SUCCESS = "SUCCESS";
+
     private String status;
     private String code;
     private String reason;
