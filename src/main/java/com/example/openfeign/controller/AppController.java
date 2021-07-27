@@ -26,7 +26,7 @@ public class AppController {
                 statusResponse.getStatusCode());
     }
     @GetMapping(value="/status401")
-    ResponseEntity<String> getApiStatus() {
+    ResponseEntity<String> get401Status() {
         ResponseEntity<ApiStatus> statusResponse = apiClient.getNotAuthorizedStatus();
         ApiStatus status = statusResponse.getBody();
         return new ResponseEntity<>(String.format("API status: [%s] code: [%s] reason: [%s]",
@@ -49,9 +49,33 @@ public class AppController {
                 status.getStatus(), status.getCode(), status.getReason()),
                 statusResponse.getStatusCode());
     }
-    @GetMapping(value="/status501")
-    ResponseEntity<String> getApiStatus() {
+    @GetMapping(value="/status500")
+    ResponseEntity<String> get500Status() {
         ResponseEntity<ApiStatus> statusResponse = apiClient.getServerErrorStatus();
+        ApiStatus status = statusResponse.getBody();
+        return new ResponseEntity<>(String.format("API status: [%s] code: [%s] reason: [%s]",
+                status.getStatus(), status.getCode(), status.getReason()),
+                statusResponse.getStatusCode());
+    }
+    @GetMapping(value="/status501")
+    ResponseEntity<String> get501Status() {
+        ResponseEntity<ApiStatus> statusResponse = apiClient.getNotImplementedStatus();
+        ApiStatus status = statusResponse.getBody();
+        return new ResponseEntity<>(String.format("API status: [%s] code: [%s] reason: [%s]",
+                status.getStatus(), status.getCode(), status.getReason()),
+                statusResponse.getStatusCode());
+    }
+    @GetMapping(value="/status502")
+    ResponseEntity<String> get502Status() {
+        ResponseEntity<ApiStatus> statusResponse = apiClient.getBadGatewayStatus();
+        ApiStatus status = statusResponse.getBody();
+        return new ResponseEntity<>(String.format("API status: [%s] code: [%s] reason: [%s]",
+                status.getStatus(), status.getCode(), status.getReason()),
+                statusResponse.getStatusCode());
+    }
+    @GetMapping(value="/status503")
+    ResponseEntity<String> get503Status() {
+        ResponseEntity<ApiStatus> statusResponse = apiClient.getServiceUnavailableStatus();
         ApiStatus status = statusResponse.getBody();
         return new ResponseEntity<>(String.format("API status: [%s] code: [%s] reason: [%s]",
                 status.getStatus(), status.getCode(), status.getReason()),

@@ -17,6 +17,12 @@ public interface ApiClient {
     @RequestMapping(value = "status404", method = RequestMethod.GET)
     ResponseEntity<ApiStatus> getNotFoundStatus();
 
-    @RequestMapping(value = "status501", method = RequestMethod.GET)
+    @RequestMapping(value = "status500", method = RequestMethod.GET)
     ResponseEntity<ApiStatus> getServerErrorStatus();
+    @RequestMapping(value = "status501", method = RequestMethod.GET)
+    ResponseEntity<ApiStatus> getNotImplementedStatus();
+    @RequestMapping(value = "status502", method = RequestMethod.GET)
+    ResponseEntity<ApiStatus> getBadGatewayStatus();
+    @RequestMapping(value = "status503", method = RequestMethod.GET)
+    ResponseEntity<ApiStatus> getServiceUnavailableStatus();
 }
