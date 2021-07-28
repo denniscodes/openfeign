@@ -3,26 +3,14 @@ package com.example.openfeign.client;
 import com.example.openfeign.model.ApiStatus;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 
 @FeignClient(value = "simple", url = "http://localhost:8090")
 public interface ApiClient {
     @RequestMapping(method = RequestMethod.GET)
-    ResponseEntity<ApiStatus> getSimpleStatus();
+    ResponseEntity<? extends ApiStatus> getSimpleStatus();
 
-    @RequestMapping(value = "status401", method = RequestMethod.GET)
-    ResponseEntity<ApiStatus> getNotAuthorizedStatus();
+    @RequestMapping(value="/", method = RequestMethod.GET)
+    ResponseEntity<ApiStatus> getAnyStatus(@RequestParam(value = "status") Integer status);
 
-    @RequestMapping(value = "status404", method = RequestMethod.GET)
-    ResponseEntity<ApiStatus> getNotFoundStatus();
-
-    @RequestMapping(value = "status500", method = RequestMethod.GET)
-    ResponseEntity<ApiStatus> getServerErrorStatus();
-    @RequestMapping(value = "status501", method = RequestMethod.GET)
-    ResponseEntity<ApiStatus> getNotImplementedStatus();
-    @RequestMapping(value = "status502", method = RequestMethod.GET)
-    ResponseEntity<ApiStatus> getBadGatewayStatus();
-    @RequestMapping(value = "status503", method = RequestMethod.GET)
-    ResponseEntity<ApiStatus> getServiceUnavailableStatus();
 }

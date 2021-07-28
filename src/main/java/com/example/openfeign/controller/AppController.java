@@ -2,7 +2,8 @@ package com.example.openfeign.controller;
 
 import com.example.openfeign.client.ApiClient;
 import com.example.openfeign.client.ApiClientException;
-import feign.FeignException;
+import com.example.openfeign.model.ApiExtendedStatus;
+import com.example.openfeign.model.ApiStatusBase;
 import lombok.RequiredArgsConstructor;
 import com.example.openfeign.model.ApiStatus;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +19,7 @@ public class AppController {
     private final ApiClient apiClient;
     @GetMapping(value="/status")
     ResponseEntity<String> getApiStatus() {
-        ResponseEntity<ApiStatus> statusResponse = apiClient.getSimpleStatus();
+        ResponseEntity<? extends ApiStatus> statusResponse = apiClient.getSimpleStatus();
         //ResponseEntity<ApiStatus> statusResponse = new ResponseEntity<>(new ApiStatus("SUCCESS", "OK", "Complete"), HttpStatus.OK);
         ApiStatus status = statusResponse.getBody();
         return new ResponseEntity<>(String.format("API status: [%s] code: [%s] reason: [%s]",
@@ -27,58 +28,41 @@ public class AppController {
     }
     @GetMapping(value="/status401")
     ResponseEntity<String> get401Status() {
-        ResponseEntity<ApiStatus> statusResponse = apiClient.getNotAuthorizedStatus();
-        ApiStatus status = statusResponse.getBody();
-        return new ResponseEntity<>(String.format("API status: [%s] code: [%s] reason: [%s]",
-                status.getStatus(), status.getCode(), status.getReason()),
-                statusResponse.getStatusCode());
+        return getResponseEntity(apiClient.getAnyStatus(401));
     }
+
     @GetMapping(value="/status404")
     ResponseEntity<String> get404Status() {
-        ResponseEntity<ApiStatus> statusResponse = null;
-        try {
-            statusResponse = apiClient.getNotFoundStatus();
-        } catch (ApiClientException e) {
-            statusResponse = new ResponseEntity<>(new ApiStatus("ERROR", "Exception", e.getMessage()),
-                    HttpStatus.valueOf(e.getResponseStatus().value()));
-        }
-        //ResponseEntity<ApiStatus> statusResponse = new ResponseEntity<>(new ApiStatus("SUCCESS", "OK", "Complete"), HttpStatus.OK);
-        ApiStatus status = statusResponse.getBody();
-        log.info(String.format("Http Status: %d", statusResponse.getStatusCodeValue()));
-        return new ResponseEntity<>(String.format("API status: [%s] code: [%s] reason: [%s]",
-                status.getStatus(), status.getCode(), status.getReason()),
-                statusResponse.getStatusCode());
+        return getResponseEntity(apiClient.getAnyStatus(404));
     }
     @GetMapping(value="/status500")
     ResponseEntity<String> get500Status() {
-        ResponseEntity<ApiStatus> statusResponse = apiClient.getServerErrorStatus();
-        ApiStatus status = statusResponse.getBody();
-        return new ResponseEntity<>(String.format("API status: [%s] code: [%s] reason: [%s]",
-                status.getStatus(), status.getCode(), status.getReason()),
-                statusResponse.getStatusCode());
+        return getResponseEntity(apiClient.getAnyStatus(500));
     }
     @GetMapping(value="/status501")
     ResponseEntity<String> get501Status() {
-        ResponseEntity<ApiStatus> statusResponse = apiClient.getNotImplementedStatus();
-        ApiStatus status = statusResponse.getBody();
-        return new ResponseEntity<>(String.format("API status: [%s] code: [%s] reason: [%s]",
-                status.getStatus(), status.getCode(), status.getReason()),
-                statusResponse.getStatusCode());
+        return getResponseEntity(apiClient.getAnyStatus(501));
     }
     @GetMapping(value="/status502")
     ResponseEntity<String> get502Status() {
-        ResponseEntity<ApiStatus> statusResponse = apiClient.getBadGatewayStatus();
-        ApiStatus status = statusResponse.getBody();
-        return new ResponseEntity<>(String.format("API status: [%s] code: [%s] reason: [%s]",
-                status.getStatus(), status.getCode(), status.getReason()),
-                statusResponse.getStatusCode());
+        return getResponseEntity(apiClient.getAnyStatus(502));
     }
     @GetMapping(value="/status503")
     ResponseEntity<String> get503Status() {
-        ResponseEntity<ApiStatus> statusResponse = apiClient.getServiceUnavailableStatus();
+        return getResponseEntity(apiClient.getAnyStatus(503));
+    }
+
+    private ResponseEntity<String> getResponseEntity(ResponseEntity<ApiStatus> statusResponse) {
         ApiStatus status = statusResponse.getBody();
+        if (status.getCode().equals(ApiStatus.SUCCESS)) {
+            ApiExtendedStatus extendedStatus = (ApiExtendedStatus) status;
+            return new ResponseEntity<>(String.format("API status: [%s] code: [%s] reason: [%s] title: [%s] text: [%s]",
+                    status.getStatus(), status.getCode(), status.getReason(), extendedStatus.getTitle(), extendedStatus.getText()),
+                    statusResponse.getStatusCode());
+        }
         return new ResponseEntity<>(String.format("API status: [%s] code: [%s] reason: [%s]",
                 status.getStatus(), status.getCode(), status.getReason()),
                 statusResponse.getStatusCode());
     }
+
 }
