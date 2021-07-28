@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import java.util.function.Supplier;
+
 @Controller("/client")
 @RequiredArgsConstructor
 @Slf4j
@@ -28,7 +30,7 @@ public class AppController {
     }
     @GetMapping(value="/status401")
     ResponseEntity<String> get401Status() {
-        return getResponseEntity(apiClient.getAnyStatus(401));
+        return getResponseEntityForSupplier(() -> apiClient.getAnyStatus(401));
     }
 
     @GetMapping(value="/status404")
@@ -65,4 +67,22 @@ public class AppController {
                 statusResponse.getStatusCode());
     }
 
+    private ResponseEntity<String> getResponseEntityForSupplier(Supplier<ResponseEntity<ApiStatus>> supplier) {
+        ResponseEntity<ApiStatus> statusResponse = null;
+        try {
+            statusResponse = supplier.get();
+        } catch (Exception e) {
+            log.error("Supplier exception.", e);
+        }
+        ApiStatus status = statusResponse.getBody();
+        if (status.getCode().equals(ApiStatus.SUCCESS)) {
+            ApiExtendedStatus extendedStatus = (ApiExtendedStatus) status;
+            return new ResponseEntity<>(String.format("API status: [%s] code: [%s] reason: [%s] title: [%s] text: [%s]",
+                    status.getStatus(), status.getCode(), status.getReason(), extendedStatus.getTitle(), extendedStatus.getText()),
+                    statusResponse.getStatusCode());
+        }
+        return new ResponseEntity<>(String.format("API status: [%s] code: [%s] reason: [%s]",
+                status.getStatus(), status.getCode(), status.getReason()),
+                statusResponse.getStatusCode());
+    }
 }
