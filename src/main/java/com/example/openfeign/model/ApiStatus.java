@@ -5,8 +5,11 @@ public interface ApiStatus {
     String SUCCESS = "SUCCESS";
 
     String getStatus();
+    void setStatus(String status);
 
     String getCode();
+    void setCode(String code);
 
     String getReason();
+    void setReason(String reason);
 }

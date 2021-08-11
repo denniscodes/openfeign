@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import java.time.Duration;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 
 @Controller("/client")
@@ -19,9 +21,10 @@ import java.util.function.Supplier;
 @Slf4j
 public class AppController {
     private final ApiClient apiClient;
+
     @GetMapping(value="/status")
     ResponseEntity<String> getApiStatus() {
-        ResponseEntity<? extends ApiStatus> statusResponse = apiClient.getSimpleStatus();
+        ResponseEntity<ApiStatusBase> statusResponse = apiClient.getSimpleStatus();
         //ResponseEntity<ApiStatus> statusResponse = new ResponseEntity<>(new ApiStatus("SUCCESS", "OK", "Complete"), HttpStatus.OK);
         ApiStatus status = statusResponse.getBody();
         return new ResponseEntity<>(String.format("API status: [%s] code: [%s] reason: [%s]",
@@ -54,7 +57,26 @@ public class AppController {
         return getResponseEntity(apiClient.getAnyStatus(503));
     }
 
-    private ResponseEntity<String> getResponseEntity(ResponseEntity<ApiStatus> statusResponse) {
+    @GetMapping(value="/delay")
+    ResponseEntity<String> getWithDelay() {
+        return getResponseEntity(apiClient.getSuccessWithDelay(5));
+    }
+
+    @GetMapping(value="/async")
+    public ResponseEntity<String> getWithAsyncCalls() {
+        AsyncFetch fetcher = new AsyncFetch();
+        try {
+            Duration runTime = fetcher.runTwoRequsts(apiClient);
+            return new ResponseEntity<>(runTime.toString(), HttpStatus.OK);
+        } catch (ExecutionException e) {
+            log.error("{}: {}", e.getClass().getSimpleName(), e.getMessage());
+        } catch (InterruptedException e) {
+            log.error("{}: {}", e.getClass().getSimpleName(), e.getMessage());
+        }
+        return new ResponseEntity<>("ERROR", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    private ResponseEntity<String> getResponseEntity(ResponseEntity<? extends ApiStatus> statusResponse) {
         ApiStatus status = statusResponse.getBody();
         if (status.getCode().equals(ApiStatus.SUCCESS)) {
             ApiExtendedStatus extendedStatus = (ApiExtendedStatus) status;
@@ -67,8 +89,8 @@ public class AppController {
                 statusResponse.getStatusCode());
     }
 
-    private ResponseEntity<String> getResponseEntityForSupplier(Supplier<ResponseEntity<ApiStatus>> supplier) {
-        ResponseEntity<ApiStatus> statusResponse = null;
+    private ResponseEntity<String> getResponseEntityForSupplier(Supplier<ResponseEntity<? extends ApiStatus>> supplier) {
+        ResponseEntity<? extends ApiStatus> statusResponse = null;
         try {
             statusResponse = supplier.get();
         } catch (Exception e) {
